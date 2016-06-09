@@ -249,3 +249,17 @@ class ClientTest(_test.TestCase):
                                              {"param": "param"}, 
                                              accepts_clientid=False)
         self.assertEqual(auth_url, "/test?param=param&key=AIzaasdf")
+
+
+    @responses.activate
+    def test_post_body_defined(self):
+        responses.add(responses.POST,
+                      "https://maps.googleapis.com/maps/api/someapi/json",
+                      body='{"status":"OK","results":[]}',
+                      status=200,
+                      content_type="application/json")
+
+        client = googlemaps.Client(key="AIzaasdf")
+        client._get("/maps/api/someapi/json", {}, post_body={})
+
+        self.assertEqual(1, len(responses.calls))

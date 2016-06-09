@@ -152,7 +152,7 @@ class Client(object):
 
     def _get(self, url, params, first_request_time=None, retry_counter=0,
              base_url=_DEFAULT_BASE_URL, accepts_clientid=True,
-             extract_body=None, requests_kwargs=None):
+             extract_body=None, requests_kwargs=None, post_body=None):
         """Performs HTTP GET request with credentials, returning the body as
         JSON.
 
@@ -161,6 +161,11 @@ class Client(object):
 
         :param params: HTTP GET parameters.
         :type params: dict or list of key/value tuples
+
+        :param post_body: POST request body. When set, a POST request will be
+            sent instead of the default GET request. post_body will be sent as 
+            the body of the request.
+        :type post_body: dict
 
         :param first_request_time: The time of the first request (None if no
             retries have occurred).
@@ -215,7 +220,10 @@ class Client(object):
         # requests_kwargs arg overriding.
         requests_kwargs = dict(self.requests_kwargs, **(requests_kwargs or {}))
         try:
-            resp = requests.get(base_url + authed_url, **requests_kwargs)
+            if post_body is None:
+                resp = requests.get(base_url + authed_url, **requests_kwargs)
+            else:
+                resp = requests.post(base_url + authed_url, **requests_kwargs)
         except requests.exceptions.Timeout:
             raise googlemaps.exceptions.Timeout()
         except Exception as e:
