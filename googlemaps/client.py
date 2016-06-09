@@ -326,6 +326,7 @@ from googlemaps.places import place
 from googlemaps.places import places_photo
 from googlemaps.places import places_autocomplete
 from googlemaps.places import places_autocomplete_query
+from googlemaps.geolocation import geolocate
 
 Client.directions = directions
 Client.distance_matrix = distance_matrix
@@ -344,6 +345,7 @@ Client.place = place
 Client.places_photo = places_photo
 Client.places_autocomplete = places_autocomplete
 Client.places_autocomplete_query = places_autocomplete_query
+Client.geolocate = geolocate
 
 
 def sign_hmac(secret, payload):
