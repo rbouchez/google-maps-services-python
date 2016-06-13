@@ -48,7 +48,6 @@ class GeolocationTest(_test.TestCase):
                             'key=%s' % self.key,
                             responses.calls[0].request.url)
         self.assertEqual(body, json.loads(responses.calls[0].request.body))
-
     
     @responses.activate
     def test_complex_request(self):
@@ -69,3 +68,26 @@ class GeolocationTest(_test.TestCase):
                             'key=%s' % self.key,
                             responses.calls[0].request.url)
         self.assertEqual(body, json.loads(responses.calls[0].request.body))
+    
+    @responses.activate
+    def test_success(self):
+        response_body = {"location":{"lat":0.0, "lng":0.0}, "accuracy": 1000.0}
+        responses.add(responses.POST,
+                      'https://www.googleapis.com/geolocation/v1/geolocate',
+                      body=json.dumps(response_body),
+                      status=200,
+                      content_type='application/json')
+        
+        body = {}
+        resp = self.client.geolocate(body)
+        self.assertEqual(response_body, resp)
+
+    @responses.activate
+    def test_error_messages(self):
+        pass
+    
+    def test_clientid_not_accepted(self):
+        client = googlemaps.Client(client_id="asdf", client_secret="asdf")
+
+        with self.assertRaises(ValueError):
+            client.geolocate({})

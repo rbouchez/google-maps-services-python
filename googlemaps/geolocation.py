@@ -25,14 +25,15 @@ _GEOLOCATION_BASE_URL = "https://www.googleapis.com"
 def geolocate(client, body):
     """
     """
-
     return client._get("/geolocation/v1/geolocate", {},
                        extract_body=_geolocation_extract,
                        base_url=_GEOLOCATION_BASE_URL, 
                        accepts_clientid=False, post_body=body)
 
 def _geolocation_extract(resp):
-    """Extracts a result from a Roads API HTTP response."""
+    """Extracts a result from a Geolocation API HTTP response.
+    Copied from roads.py
+    """
 
     try:
         j = resp.json()
@@ -45,15 +46,16 @@ def _geolocation_extract(resp):
 
     if "error" in j:
         error = j["error"]
-        status = error["status"]
+        reasons = [e.reason for e in error["errors"]]
 
-        if status == "RESOURCE_EXHAUSTED":
+        if "userRateLimitExceeded" in reasons:
             raise googlemaps.exceptions._RetriableRequest()
 
         if "message" in error:
-            raise googlemaps.exceptions.ApiError(status, error["message"])
+            raise googlemaps.exceptions.ApiError(", ".join(reasons), 
+                                                 error["message"])
         else:
-            raise googlemaps.exceptions.ApiError(status)
+            raise googlemaps.exceptions.ApiError(", ".join(reasons))
 
     if resp.status_code != 200:
         raise googlemaps.exceptions.HTTPError(resp.status_code)
