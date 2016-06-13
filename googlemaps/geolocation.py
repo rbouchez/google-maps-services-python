@@ -22,12 +22,40 @@ from googlemaps import convert
 _GEOLOCATION_BASE_URL = "https://www.googleapis.com"
 
 
-def geolocate(client, payload):
+def geolocate(client, body):
     """
     """
 
-    params = {}
-
-    return client._get("/geolocation/v1/geolocate", params,
+    return client._get("/geolocation/v1/geolocate", {},
+                       extract_body=_geolocation_extract,
                        base_url=_GEOLOCATION_BASE_URL, 
-                       accepts_clientid=False, post_body={})["results"]
+                       accepts_clientid=False, post_body=body)
+
+def _geolocation_extract(resp):
+    """Extracts a result from a Roads API HTTP response."""
+
+    try:
+        j = resp.json()
+    except:
+        if resp.status_code != 200:
+            raise googlemaps.exceptions.HTTPError(resp.status_code)
+
+        raise googlemaps.exceptions.ApiError("UNKNOWN_ERROR",
+                                             "Received a malformed response.")
+
+    if "error" in j:
+        error = j["error"]
+        status = error["status"]
+
+        if status == "RESOURCE_EXHAUSTED":
+            raise googlemaps.exceptions._RetriableRequest()
+
+        if "message" in error:
+            raise googlemaps.exceptions.ApiError(status, error["message"])
+        else:
+            raise googlemaps.exceptions.ApiError(status)
+
+    if resp.status_code != 200:
+        raise googlemaps.exceptions.HTTPError(resp.status_code)
+
+    return j

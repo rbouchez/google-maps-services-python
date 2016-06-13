@@ -223,7 +223,9 @@ class Client(object):
             if post_body is None:
                 resp = requests.get(base_url + authed_url, **requests_kwargs)
             else:
-                resp = requests.post(base_url + authed_url, **requests_kwargs)
+                resp = requests.post(base_url + authed_url, 
+                                     json=post_body, 
+                                     **requests_kwargs)
         except requests.exceptions.Timeout:
             raise googlemaps.exceptions.Timeout()
         except Exception as e:

@@ -20,9 +20,11 @@
 
 import datetime
 import responses
+import json
 
 import test as _test
 import googlemaps
+
 
 class GeolocationTest(_test.TestCase):
 
@@ -34,13 +36,36 @@ class GeolocationTest(_test.TestCase):
     def test_simple_geolocation(self):
         responses.add(responses.POST,
                       'https://www.googleapis.com/geolocation/v1/geolocate',
-                      body='{"status":"OK","results":[]}',
+                      body='{"location":{"lat":0.0, "lng":0.0}, "accuracy": 1000.0}',
                       status=200,
                       content_type='application/json')
 
-        results = self.client.geolocate({})
+        body = {}
+        resp = self.client.geolocate(body)
 
         self.assertEqual(1, len(responses.calls))
         self.assertURLEqual('https://www.googleapis.com/geolocation/v1/geolocate?'
                             'key=%s' % self.key,
                             responses.calls[0].request.url)
+        self.assertEqual(body, json.loads(responses.calls[0].request.body))
+
+    
+    @responses.activate
+    def test_complex_request(self):
+        responses.add(responses.POST,
+                      'https://www.googleapis.com/geolocation/v1/geolocate',
+                      body='{"location":{"lat":0.0, "lng":0.0}, "accuracy": 1000.0}',
+                      status=200,
+                      content_type='application/json')
+
+        with open("test/test_geolocation_body.json") as f:
+          body = json.loads(f.read())
+        
+        resp = self.client.geolocate(body)
+
+        self.assertEqual(1, len(responses.calls))
+
+        self.assertURLEqual('https://www.googleapis.com/geolocation/v1/geolocate?'
+                            'key=%s' % self.key,
+                            responses.calls[0].request.url)
+        self.assertEqual(body, json.loads(responses.calls[0].request.body))
